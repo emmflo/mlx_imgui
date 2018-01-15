@@ -18,5 +18,6 @@ void	update_ui_coord(t_ui_state *ui, int x, int y);
 void	update_ui_mouse_button(t_ui_state *ui, int button);
 int	slider(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int *value);
 t_rect_int	make_rect(int x, int y, int w, int h);
+int	color_picker(t_window *win, t_ui_state *ui, int id, t_rect_int rect, t_hsv *color, t_hsv *color_select);
 
 #endif

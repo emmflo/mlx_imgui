@@ -58,14 +58,14 @@ int	button(t_window *win, t_ui_state *ui, int id, t_rect_int rect, char *str)
 	shadow.y = rect.y + 8;
 	shadow.w = rect.w;
 	shadow.h = rect.h;
-	g_rect_fill(win->img_front, shadow, 0xCCCCCC);
+	g_rect_fill(win->img_next, shadow, 0xCCCCCC);
 	if (ui->hotitem == id)
 	{
-		g_rect_fill(win->img_front, rect, 0xFFFFFF);
+		g_rect_fill(win->img_next, rect, 0xFFFFFF);
 	}
 	else
 	{
-		g_rect_fill(win->img_front, rect, 0xAAAAAA);
+		g_rect_fill(win->img_next, rect, 0xAAAAAA);
 	}
 	//mlx_string_put(win->mlx_ptr, win->win_ptr, rect.x, rect.y + rect.h / 2, 0, str);
 	g_add_to_text_buffer(win, g_make_text(rect.x + 5, rect.y + rect.h / 2, 0, str));
@@ -92,7 +92,7 @@ int	slider(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int 
 		ui->hotitem = 0;
 	if (ui->activeitem == id && !ui->mousedown)
 		ui->activeitem = 0;
-	g_rect_fill(win->img_front, rect, 0x777777);
+	g_rect_fill(win->img_next, rect, 0x777777);
 	if (rect.w < rect.h)
 	{
 		thumb.x = rect.x + 4;
@@ -109,9 +109,9 @@ int	slider(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int 
 
 	}
 	if (ui->activeitem == id || ui->hotitem == id)
-		g_rect_fill(win->img_front, thumb, 0xFFFFFF);
+		g_rect_fill(win->img_next, thumb, 0xFFFFFF);
 	else
-		g_rect_fill(win->img_front, thumb, 0xAAAAAA);
+		g_rect_fill(win->img_next, thumb, 0xAAAAAA);
 	if (ui->activeitem == id)
 	{
 		if (rect.w < rect.h)
@@ -156,11 +156,11 @@ int	color_picker(t_window *win, t_ui_state *ui, int id, t_rect_int rect, t_hsv *
 		ui->hotitem = 0;
 	if (ui->activeitem == id && !ui->mousedown)
 		ui->activeitem = 0;
-	g_rect_fill(win->img_front, rect, 0x777777);
+	g_rect_fill(win->img_next, rect, 0x777777);
 	hue_value = (int)(color->hue * 1000 / 360);
 	slider(win, ui, 255, make_rect(rect.x, rect.y + rect.h - 32, rect.w, 32), 1000, &hue_value);
 	color->hue = hue_value / 1000.0 * 360.0;
-	g_rect_hsv_gradient(win->img_front, make_rect(rect.x, rect.y, rect.w, rect.h - 32), color->hue);
+	g_rect_hsv_gradient(win->img_next, make_rect(rect.x, rect.y, rect.w, rect.h - 32), color->hue);
 	if (ui->hotitem == id)
 	{
 		color->saturation = (ui->mousex - rect.x) / (double)rect.w;
