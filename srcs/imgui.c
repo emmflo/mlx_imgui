@@ -72,7 +72,10 @@ int	button(t_window *win, t_ui_state *ui, int id, t_rect_int rect, char *str)
 	if (ui->mousedown == 0 &&
 		ui->hotitem == id &&
 		ui->activeitem == id)
+	{
+		ui->activeitem = 0;
 		return (1);
+	}
 	return (0);
 }
 
