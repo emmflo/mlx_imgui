@@ -145,29 +145,14 @@ int	button(t_window *win, t_ui_state *ui, int id, t_rect_int rect, char *str)
 	return (0);
 }*/
 
-int	slider(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int *value)
-{
-	int	ret;
-
-	g_rect_fill(win->img_next, rect, 0x777777);
-	ret = slider_thumb(win, ui, id, rect, max, value);
-	if (regionhit(ui, rect))
-	{
-		ui->hotitem = id;
-		if (ui->activeitem == 0 && ui->mousedown)
-			ui->activeitem = id;
-	}
-	return (ret);
-}
-
-
-int	slider_thumb(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int *value)
+int	thumb(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int *value, int fixed, int color)
 {
 	int		v;
 	int		mousepos;
 	t_rect_int	thumb;
 
 
+	//printf("%d %d %d %d %d %d\n", rect.x, rect.y, rect.w, rect.h, *value, fixed);
 	//g_rect_fill(win->img_next, rect, 0x777777);
 	if (rect.w < rect.h)
 	{
@@ -197,8 +182,8 @@ int	slider_thumb(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max
 	if (ui->activeitem == id || ui->hotitem == id)
 		g_rect_fill(win->img_next, thumb, 0xFFFFFF);
 	else
-		g_rect_fill(win->img_next, thumb, 0xAAAAAA);
-	if (ui->activeitem == id)
+		g_rect_fill(win->img_next, thumb, color);
+	if (ui->activeitem == id && !fixed)
 	{
 		if (rect.w < rect.h)
 		{
@@ -226,6 +211,31 @@ int	slider_thumb(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max
 		}
 	}
 	return (0);
+}
+
+int	slider_thumb(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int *value)
+{
+	int	ret;
+
+	ret = thumb(win, ui, id, rect, max, value, 0, 0xAAAAAA);
+	if (regionhit(ui, rect))
+	{
+		ui->hotitem = id;
+		if (ui->activeitem == 0 && ui->mousedown)
+			ui->activeitem = id;
+	}
+	return (ret);
+}
+
+int	fixed_thumb(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int *value)
+{
+	return (thumb(win, ui, id, rect, max, value, 1, 0xAAAAAA));
+}
+
+int	slider(t_window *win, t_ui_state *ui, int id, t_rect_int rect, int max, int *value)
+{
+	g_rect_fill(win->img_next, rect, 0x777777);
+	return (slider_thumb(win, ui, id, rect, max, value));
 }
 
 int	color_picker(t_window *win, t_ui_state *ui, int id, t_rect_int rect, t_hsv *color, t_hsv *color_select)
@@ -268,4 +278,108 @@ int	color_picker(t_window *win, t_ui_state *ui, int id, t_rect_int rect, t_hsv *
 		}
 	}
 	return (0);
+}
+
+int	get_max_thumb(t_list *thumbs)
+{
+	int	max;
+
+	max = 0;
+	while (thumbs != NULL)
+	{
+		if (((t_thumb*)thumbs->content)->id > max)
+			max = ((t_thumb*)thumbs->content)->id;
+		thumbs = thumbs->next;
+	}
+	return (max);
+}
+
+t_thumb	*add_thumb(t_list **thumbs, int value, int fixed, int color)
+{
+	int	id;
+	t_thumb	*thumb_elem;
+
+	if (thumbs == NULL)
+		return (NULL);
+	if (*thumbs == NULL)
+		id = 1;
+	else
+		id = get_max_thumb(*thumbs) + 1;
+	if (!(thumb_elem = (t_thumb*)malloc(sizeof(t_thumb))))
+		return (NULL);
+	thumb_elem->id = id;
+	thumb_elem->value = value;
+	thumb_elem->fixed = fixed;
+	thumb_elem->color = color;
+	ft_lstadd(thumbs, ft_lstnew(thumb_elem, sizeof(t_thumb)));
+	return (thumb_elem);
+}
+
+void	del_thumb(t_list **thumbs, int id)
+{
+	t_list	*prev;
+	t_list	*ptr;
+
+	
+	prev = NULL;
+	ptr = *thumbs;
+	while (ptr != NULL)
+	{
+		if (((t_thumb*)ptr->content)->id == id)
+		{
+			if (prev == NULL)
+				*thumbs = ptr->next;
+			else
+				prev->next = ptr->next;
+			free(ptr->content);
+			free(ptr);
+			return ;
+		}
+		prev = ptr;
+		ptr = ptr->next;
+	}
+}
+
+void	change_thumb_color(t_list **thumbs, int id, int color)
+{
+	t_list	*ptr;
+
+	
+	ptr = *thumbs;
+	while (ptr != NULL)
+	{
+		if (((t_thumb*)ptr->content)->id == id)
+		{
+			((t_thumb*)ptr->content)->color = color;
+			return ;
+		}
+		ptr = ptr->next;
+	}
+}
+
+int	multiple_thumbs(t_window* win, t_ui_state *ui, int id, t_rect_int rect, int max, t_list **thumbs, int *last_active)
+{
+	t_list	*elem;
+	t_thumb	*thumb_elem;
+	int	i;
+	int	ret;
+
+	if (!thumbs)
+		return (0);
+	i = 0;
+	elem = *thumbs;
+	ret = 0;
+	while (elem != NULL)
+	{
+		thumb_elem = (t_thumb*)(elem->content);
+		//printf("THUMB ID %d\n", thumb_elem->id);
+		thumb(win, ui, id + thumb_elem->id, rect, max, &(thumb_elem->value), thumb_elem->fixed, thumb_elem->color);
+		if (ui->activeitem == (id + thumb_elem->id))
+		{
+			*last_active = thumb_elem->id;
+			ret = 1;
+		}
+		elem = elem->next;
+	}
+	return (ret);
 }
